@@ -1,0 +1,25 @@
+plugins {
+    id 'org.jetbrains.kotlin.jvm' version '1.5.10'
+    id 'org.jetbrains.kotlin.plugin.serialization' version '1.5.10'
+
+    id 'net.mamoe.mirai-console' version '2.7.1'
+}
+
+group = 'cn.lliiooll.bot'
+version = '0.0.1'
+
+repositories {
+    mavenLocal()
+    maven { url 'https://maven.aliyun.com/repository/public' }
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.projectlombok:lombok:1.18.20'
+    annotationProcessor 'org.projectlombok:lombok:1.18.20'
+    implementation 'com.google.code.gson:gson:2.8.8'
+    implementation 'com.squareup.okhttp3:okhttp:4.9.1'
+    implementation 'cn.hutool:hutool-all:5.7.13'
+    implementation 'com.google.guava:guava:30.1.1-jre'
+    implementation 'com.alibaba:fastjson:1.2.78'
+}

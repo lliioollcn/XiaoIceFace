@@ -1,26 +1,16 @@
 package cn.lliiooll.bot.ai;
 
-import cn.hutool.core.codec.Base64;
-import cn.hutool.core.io.IoUtil;
-import cn.hutool.core.util.RandomUtil;
-import cn.hutool.crypto.SecureUtil;
 import cn.lliiooll.bot.ai.bean.ImgUploadResponse;
 import cn.lliiooll.bot.ai.bean.ProcessRequest;
 import cn.lliiooll.bot.ai.bean.ProcessResponse;
+import cn.lliiooll.bot.util.Utils;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
-import com.google.common.base.Strings;
-import lombok.Builder;
-import lombok.Data;
-import lombok.SneakyThrows;
 import okhttp3.Headers;
 
-import java.io.File;
 import java.net.URL;
 import java.util.HashMap;
-import java.util.Objects;
 
-@Data
 public class XiaoIceFaceModule {
     public String url;
     public String sourceStr;
@@ -30,8 +20,7 @@ public class XiaoIceFaceModule {
         this.url = url;
     }
 
-    @SneakyThrows
-    public ProcessResponse process() {
+    public ProcessResponse process() throws Throwable {
         Headers headers = Network.get("https://ux.xiaoice.com/beautyv3").headers();
         StringBuilder cookies = new StringBuilder();
         for (int i = 0; i < headers.size(); i++) {
@@ -51,27 +40,34 @@ public class XiaoIceFaceModule {
                     put("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:89.0) Gecko/20100101 Firefox/89.0");
                     put("Referer", "https://ux.xiaoice.com/beautyv3");
                 }}), ImgUploadResponse.class);
-        String jstr = Network.postJson("https://ux.xiaoice.com/api/imageAnalyze/Process?service=beauty", Network.gson.toJson(ProcessRequest.builder()
-                .CreateTime(System.currentTimeMillis() / 1000)
-                .MsgId(System.currentTimeMillis())
-                .TraceId(SecureUtil.md5(RandomUtil.randomString(10)))
-                .Content(ProcessRequest.Content.builder()
-                        .imageUrl(iur.getHost() + iur.getUrl())
-                        .build())
-                .build()), Headers.of(new HashMap<String, String>() {{
+        System.out.println(JSON.toJSON(iur));
+        ProcessRequest request = new ProcessRequest(
+                System.currentTimeMillis() / 1000,
+                System.currentTimeMillis(),
+                Utils.md5(Utils.random(10)),
+                ProcessRequest.ContentData.getInstance(iur.getURL())
+
+        );
+        System.out.println(JSON.toJSON(request));
+        String jstr = Network.postJson("https://ux.xiaoice.com/api/imageAnalyze/Process?service=beauty", JSON.toJSONString(
+                request
+        ), Headers.of(new HashMap<String, String>() {{
             put("Cookie", cookies.toString());
             put("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:89.0) Gecko/20100101 Firefox/89.0");
             put("Referer", "https://ux.xiaoice.com/beautyv3");
         }})).body().string();
-        this.setSourceStr(jstr);
-        this.setSourceObj(JSON.parseObject(getSourceStr()));
-        return Network.gson.fromJson(jstr, ProcessResponse.class);
+        this.sourceStr = jstr;
+        this.sourceObj = JSON.parseObject(sourceStr);
+        System.out.println(this.sourceStr);
+        System.out.println(this.sourceObj);
+        ProcessResponse r = JSON.parseObject(jstr, ProcessResponse.class);
+        System.out.println(r);
+        return r;
     }
 
-    @SneakyThrows
-    public String getFileBase64() {
-        if (!Strings.isNullOrEmpty(url)) {
-            return Base64.encode(IoUtil.readBytes(new URL(url).openConnection().getInputStream()));
+    public String getFileBase64() throws Throwable {
+        if (!Utils.isBlank(url)) {
+            return Utils.base64(Utils.bytes(new URL(url).openConnection().getInputStream()));
         } else
             throw new RuntimeException("file、fileName、fileBase64必须至少有一项不为空");
 

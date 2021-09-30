@@ -1,22 +1,29 @@
 package cn.lliiooll.bot.ai.bean;
 
-import lombok.Data;
-
-@Data
 public class ProcessResponse {
     public String msgId;
     public long timestamp;
     public String receiverId;
     public Content content;
 
-    @Data
+    /**
+     * 用于序列化/反序列化
+     */
+    public ProcessResponse() {
+    }
+
     public static class Content {
         public String text;
         public String imageUrl;
         public Metadata metadata;
+
+        /**
+         * 用于序列化/反序列化
+         */
+        public Content() {
+        }
     }
 
-    @Data
     public static class Metadata {
         public long FBR_Cnt;
         public String FBR_Mode;
@@ -32,5 +39,12 @@ public class ProcessResponse {
         public String AnswerFeed;
         public String w;
         public String aid;
+
+        /**
+         * 用于序列化/反序列化
+         */
+        public Metadata() {
+
+        }
     }
 }

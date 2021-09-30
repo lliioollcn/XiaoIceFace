@@ -1,17 +1,15 @@
 package cn.lliiooll.bot.ai;
 
-import cn.hutool.json.JSONUtil;
-import com.google.common.base.Strings;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import lombok.SneakyThrows;
+import cn.lliiooll.bot.util.Utils;
+import com.alibaba.fastjson.JSON;
+import kotlin.text.StringsKt;
 import okhttp3.*;
 
-public class Network {
-    public static final Gson gson = new GsonBuilder().serializeNulls().create();
+import java.io.IOException;
 
-    @SneakyThrows
-    public static Response post(String url, RequestBody body, Headers headers) {
+public class Network {
+
+    public static Response post(String url, RequestBody body, Headers headers) throws Throwable {
         return new OkHttpClient()
                 .newCall(new Request.Builder()
                         .url(url)
@@ -20,8 +18,7 @@ public class Network {
                         .build()).execute();
     }
 
-    @SneakyThrows
-    public static Response get(String url) {
+    public static Response get(String url) throws Throwable {
         return new OkHttpClient()
                 .newCall(new Request.Builder()
                         .url(url)
@@ -30,24 +27,24 @@ public class Network {
                 .execute();
     }
 
-    @SneakyThrows
-    public static <T> T post(String url, RequestBody body, Headers headers, Class<T> type) {
+    public static <T> T post(String url, RequestBody body, Headers headers, Class<T> type) throws Throwable {
         Response response = post(url, body, headers);
         String jstr = response.body().string();
         System.out.println(jstr);
-        if (!Strings.isNullOrEmpty(jstr) && JSONUtil.isJson(jstr)) {
-            return gson.fromJson(jstr, type);
+        if (!Utils.isBlank(jstr) && Utils.isJson(jstr)) {
+            return JSON.parseObject(jstr, type);
         } else {
+            System.out.println(jstr + " not json");
             return null;
         }
     }
 
 
-    public static <T> T post(String url, String body, Headers headers, Class<T> type) {
+    public static <T> T post(String url, String body, Headers headers, Class<T> type) throws Throwable {
         return post(url, RequestBody.create(body, MediaType.get("application/x-www-form-urlencoded")), headers, type);
     }
 
-    public static Response postJson(String url, String body, Headers headers) {
+    public static Response postJson(String url, String body, Headers headers) throws Throwable {
         return post(url, RequestBody.create(body, MediaType.get("application/json;charset=utf-8")), headers);
     }
 }

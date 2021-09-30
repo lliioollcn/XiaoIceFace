@@ -1,6 +1,5 @@
 package cn.lliiooll.bot;
 
-import cn.lliiooll.bot.ai.XiaoIceFaceModule;
 import net.mamoe.mirai.console.command.CommandManager;
 import net.mamoe.mirai.console.plugin.jvm.JavaPlugin;
 import net.mamoe.mirai.console.plugin.jvm.JvmPluginDescriptionBuilder;
@@ -17,7 +16,7 @@ public final class XiaoIceFace extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        CommandManager.INSTANCE.registerCommand(FaceCommand.INSTANCE,true);
+        CommandManager.INSTANCE.registerCommand(FaceCommand.INSTANCE, true);
         getLogger().info("加载完毕");
     }
 

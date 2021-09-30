@@ -8,6 +8,11 @@ import net.mamoe.mirai.message.data.Image
 import net.mamoe.mirai.message.data.Image.Key.queryUrl
 import java.net.URL
 
+/**
+ * 指令处理器
+ *
+ * @author lliiooll
+ */
 object FaceCommand : SimpleCommand(
     XiaoIceFace.INSTANCE,
     "face",
@@ -15,6 +20,10 @@ object FaceCommand : SimpleCommand(
     description = "颜值检测"
 ) {
 
+    /**
+     * 指令处理方法
+     * 由mirai自动适配并触发
+     */
     @Handler
     suspend fun CommandSender.handle(img: Image) { // 这个参数会被作为指令参数要求
         val respones = XiaoIceFaceModule(img.queryUrl()).process()

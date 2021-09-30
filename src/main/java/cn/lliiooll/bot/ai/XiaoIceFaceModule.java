@@ -8,19 +8,75 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import okhttp3.Headers;
 
-import java.net.URL;
 import java.util.HashMap;
 
+/**
+ * 小冰颜值识别模块
+ *
+ * @author lliiooll
+ */
 public class XiaoIceFaceModule {
+    /**
+     * 图片地址
+     */
     public String url;
+    /**
+     * 响应json字符串
+     */
     public String sourceStr;
+    /**
+     * 响应json实例
+     */
     public JSONObject sourceObj;
 
     public XiaoIceFaceModule(String url) {
         this.url = url;
     }
 
+    /**
+     * 上传并处理图片
+     *
+     * @return 处理结果
+     * @throws Throwable 各种错误
+     */
     public ProcessResponse process() throws Throwable {
+        String cookies = getCookies();
+        Headers headers = getHeaders(cookies);
+        ImgUploadResponse iur = Network.post("https://ux.xiaoice.com/api/image/UploadBase64?exp=0", getImgBase64(), headers, ImgUploadResponse.class);
+        ProcessRequest request = new ProcessRequest(
+                System.currentTimeMillis() / 1000,
+                System.currentTimeMillis(),
+                Utils.md5(Utils.random(10)),
+                ProcessRequest.ContentData.getInstance(iur.getURL())
+        );
+        String jstr = Network.postJson("https://ux.xiaoice.com/api/imageAnalyze/Process?service=beauty", JSON.toJSONString(request), headers).body().string();
+        this.sourceStr = jstr;
+        this.sourceObj = JSON.parseObject(sourceStr);
+        return JSON.parseObject(jstr, ProcessResponse.class);
+    }
+
+    /**
+     * 获取请求头
+     *
+     * @param cookies 获取到的cookie
+     * @return 请求头
+     */
+    private Headers getHeaders(final String cookies) {
+        return Headers.of(new HashMap<String, String>() {{
+            put("Cookie", cookies);
+            put("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:89.0) Gecko/20100101 Firefox/89.0");
+            put("Referer", "https://ux.xiaoice.com/beautyv3");
+        }});
+    }
+
+    /**
+     * *********重要*********
+     * 没cookies不返回任何东西
+     *
+     * @return cookies 获取到的cookie
+     * @throws Throwable 各种错误
+     */
+    private String getCookies() throws Throwable {
         Headers headers = Network.get("https://ux.xiaoice.com/beautyv3").headers();
         StringBuilder cookies = new StringBuilder();
         for (int i = 0; i < headers.size(); i++) {
@@ -33,43 +89,20 @@ public class XiaoIceFaceModule {
                 }
             }
         }
-        ImgUploadResponse iur = Network.post("https://ux.xiaoice.com/api/image/UploadBase64?exp=0",
-                getFileBase64(),
-                Headers.of(new HashMap<String, String>() {{
-                    put("Cookie", cookies.toString());
-                    put("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:89.0) Gecko/20100101 Firefox/89.0");
-                    put("Referer", "https://ux.xiaoice.com/beautyv3");
-                }}), ImgUploadResponse.class);
-        System.out.println(JSON.toJSON(iur));
-        ProcessRequest request = new ProcessRequest(
-                System.currentTimeMillis() / 1000,
-                System.currentTimeMillis(),
-                Utils.md5(Utils.random(10)),
-                ProcessRequest.ContentData.getInstance(iur.getURL())
-
-        );
-        System.out.println(JSON.toJSON(request));
-        String jstr = Network.postJson("https://ux.xiaoice.com/api/imageAnalyze/Process?service=beauty", JSON.toJSONString(
-                request
-        ), Headers.of(new HashMap<String, String>() {{
-            put("Cookie", cookies.toString());
-            put("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:89.0) Gecko/20100101 Firefox/89.0");
-            put("Referer", "https://ux.xiaoice.com/beautyv3");
-        }})).body().string();
-        this.sourceStr = jstr;
-        this.sourceObj = JSON.parseObject(sourceStr);
-        System.out.println(this.sourceStr);
-        System.out.println(this.sourceObj);
-        ProcessResponse r = JSON.parseObject(jstr, ProcessResponse.class);
-        System.out.println(r);
-        return r;
+        return cookies.toString();
     }
 
-    public String getFileBase64() throws Throwable {
+    /**
+     * 从url获取图片并转化为base64
+     *
+     * @return 图片的base64
+     * @throws Throwable 各种错误
+     */
+    public String getImgBase64() throws Throwable {
         if (!Utils.isBlank(url)) {
-            return Utils.base64(Utils.bytes(new URL(url).openConnection().getInputStream()));
+            return Utils.base64(Utils.bytes(url));
         } else
-            throw new RuntimeException("file、fileName、fileBase64必须至少有一项不为空");
+            throw new RuntimeException("url不能为空");
 
     }
 
